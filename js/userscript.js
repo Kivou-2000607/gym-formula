@@ -9,8 +9,6 @@
 // @run-at       document-start
 // ==/UserScript==
 
-const fetch = window.fetch;
-
 let counter = 0;
 
 let initialHappy = [];
@@ -80,6 +78,15 @@ const getHappy = () =>
             .innerText.match(/^\d+/)[0]
     );
 
+const getGym = () =>
+    [...document.querySelectorAll('[id^="gym"]')]
+        .filter((gym) =>
+            [...gym.classList].some((cls) => cls.indexOf("active") !== -1)
+        )
+        .map((active) => parseInt(active.id.match(/\d+$/)[0]))[0];
+
+const fetch = window.fetch;
+
 unsafeWindow.fetch = function () {
     if (arguments[0].indexOf("gym.php?step=train") !== -1) {
         const index = announceRequest(getHappy());
@@ -94,6 +101,7 @@ unsafeWindow.fetch = function () {
                             newValue: json.stat.newValue,
                             gain: json.gainMessage.split(" ")[2],
                             stat: json.stat.name,
+                            gym: getGym(),
                         });
                     });
                 })
