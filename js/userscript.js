@@ -29,7 +29,7 @@ const publishResponse = (index, response) => {
     if (counter <= initialHappy.length && counter <= updatedHappy.length) {
         const happyAfter = updatedHappy.sort().reverse();
 
-        const minHappy = Math.min(...initialHappy);
+        const minHappy = Math.max(...initialHappy);
         let happyBefore = [];
         happyAfter.forEach((happy, pos) => {
             if (pos === 0) {
