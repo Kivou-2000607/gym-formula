@@ -5,7 +5,7 @@
 // @description  try to take over the world!
 // @author       Pyrit[2111649]
 // @match        https://www.torn.com/gym.php
-// @grant        none
+// @grant        GM.xmlHttpRequest
 // @run-at       document-start
 // ==/UserScript==
 
@@ -80,7 +80,7 @@ const getHappy = () =>
             .innerText.match(/^\d+/)[0]
     );
 
-window.fetch = function () {
+unsafeWindow.fetch = function () {
     if (arguments[0].indexOf("gym.php?step=train") !== -1) {
         const index = announceRequest(getHappy());
         return new Promise((resolve, reject) => {
@@ -108,7 +108,7 @@ const OrigWebSocket = window.WebSocket;
 const callWebSocket = OrigWebSocket.apply.bind(OrigWebSocket);
 let wsAddListener = OrigWebSocket.prototype.addEventListener;
 wsAddListener = wsAddListener.call.bind(wsAddListener);
-window.WebSocket = function WebSocket(url, protocols) {
+unsafeWindow.WebSocket = function WebSocket(url, protocols) {
     let ws;
     if (!(this instanceof WebSocket)) {
         // Called without 'new' (browsers will throw an error).
