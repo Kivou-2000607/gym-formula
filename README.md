@@ -1,2 +1,2 @@
 # gym-formula
-Crack down the gym forumal and make predictions
+Crack down the gym formula and make predictions
