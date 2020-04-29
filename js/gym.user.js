@@ -22,41 +22,42 @@ const state = {
 
 function handleApiResponse(response) {
     if (response.status != 200) {
-        throw new Error(`HTTP Status Code ${response.status} - ${response.responseText}`);
+        return response;
     }
     const data = JSON.parse(response.responseText);
     if (!('error' in data)) {
-        return;
+        return response;
     }
-    error = data['error']
-    code = error['code']
-    response.statusText = error['error']
+    error = data['error'];
+    code = error['code'];
+    response.responseText = error['error'];
 
-    if (code in [1, 2, 3, 4, 6])
-        response.status = 400
-    else if (code in [0, 12])
-        response.status = 500
-    else if (code in [7, 8, 10, 11])
-        response.status = 403
-    else if (code in [9])
-        response.status = 503
-    else if (code in [5])
-        response.status = 429
-
-    throw new Error(`HTTP Status Code ${response.status} - ${response.statusText}`);
+    if ([1, 2, 3, 4, 6].includes(code))
+        response.status = 400;
+    else if ([0, 12].includes(code))
+        response.status = 500;
+    else if ([7, 8, 10, 11].includes(code))
+        response.status = 403;
+    else if ([9].includes(code))
+        response.status = 503;
+    else if ([5].includes(code))
+        response.status = 429;
+    return response;
 };
 
 
 const getApiData = () =>
-    new Promise((resolve) => {
+    new Promise((resolve, reject) => {
         if (state.api) resolve(state.api);
 
         GM.xmlHttpRequest({
             url: `https://api.torn.com/user/?key=${apiKey}&selections=perks,timestamp,basic`,
             onload: (response) => {
                 console.log(response);
-                handleApiResponse(response);
-                console.log(response);
+                response = handleApiResponse(response);
+                if (response.status != 200) {
+                    reject(`HTTP Status ${response.status} ${response.statusText}: ${response.responseText}`);
+                }
                 const perkRegex = /gym|gain|happ/i;
                 const json = JSON.parse(response.responseText);
                 state.api = {
@@ -150,7 +151,7 @@ const publishResponse = (index, response) => {
                 body: JSON.stringify({ payload, api }),
                 onload: (response) => console.log(response),
             });
-        }).catch((error) => reject(error));
+        }).catch((error) => reject(error));;
     }
 };
 
