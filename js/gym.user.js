@@ -20,6 +20,33 @@ const state = {
     api: undefined,
 };
 
+function handleApiResponse(response) {
+    if (response.status != 200) {
+        throw new Error(`HTTP Status Code ${response.status} - ${response.responseText}`);
+    }
+    const data = JSON.parse(response.responseText);
+    if (!('error' in data)) {
+        return;
+    }
+    error = data['error']
+    code = error['code']
+    response.statusText = error['error']
+
+    if (code in [1, 2, 3, 4, 6])
+        response.status = 400
+    else if (code in [0, 12])
+        response.status = 500
+    else if (code in [7, 8, 10, 11])
+        response.status = 403
+    else if (code in [9])
+        response.status = 503
+    else if (code in [5])
+        response.status = 429
+
+    throw new Error(`HTTP Status Code ${response.status} - ${response.statusText}`);
+};
+
+
 const getApiData = () =>
     new Promise((resolve) => {
         if (state.api) resolve(state.api);
@@ -27,6 +54,8 @@ const getApiData = () =>
         GM.xmlHttpRequest({
             url: `https://api.torn.com/user/?key=${apiKey}&selections=perks,timestamp,basic`,
             onload: (response) => {
+                console.log(response);
+                handleApiResponse(response);
                 console.log(response);
                 const perkRegex = /gym|gain|happ/i;
                 const json = JSON.parse(response.responseText);
@@ -121,7 +150,7 @@ const publishResponse = (index, response) => {
                 body: JSON.stringify({ payload, api }),
                 onload: (response) => console.log(response),
             });
-        });
+        }).catch((error) => reject(error));
     }
 };
 
