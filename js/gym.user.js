@@ -103,8 +103,8 @@ const publishResponse = (index, response) => {
 
         const payload = state.responses.map((response, pos) => ({
             ...response,
-            happyBefore: happyBefore[pos],
-            happyAfter: happyAfter[pos],
+            happy_before: happyBefore[pos],
+            happy_after: happyAfter[pos],
         }));
 
         resetState();
