@@ -56,6 +56,7 @@ const getApiData = () =>
                 console.log(response);
                 response = handleApiResponse(response);
                 if (response.status != 200) {
+                    // should here be an return to intercept execution @Pyrit? 
                     reject(`HTTP Status ${response.status} ${response.statusText}: ${response.responseText}`);
                 }
                 const perkRegex = /gym|gain|happ/i;
@@ -96,14 +97,14 @@ const resetState = () => {
 };
 
 const happyUpdate = (happy) => {
-    if (state.counter > 0) {
-        if (happy < state.lastUpdate) {
-            state.updatedHappy.push(happy);
-            state.lastUpdate = happy;
-        } else {
-            resetState();
-        }
-    }
+    if (state.counter === 0) return;
+
+    if (happy < state.lastUpdate) {
+        state.updatedHappy.push(happy);
+        state.lastUpdate = happy;
+        return;
+    } 
+    resetState();
 };
 
 const announceRequest = (happy) => {
@@ -117,42 +118,44 @@ const publishResponse = (index, response) => {
 
     state.responses[index] = response;
 
-    if (state.counter <= state.updatedHappy.length) {
-        const happyAfter = state.updatedHappy.sort().reverse();
+    if (state.counter > state.updatedHappy.length) return;
 
-        const maxHappy = Math.max(...state.initialHappy);
-        let happyBefore = [];
-        happyAfter.forEach((happy, pos) => {
-            if (pos === 0) {
-                happyBefore[pos] = maxHappy;
-            } else {
-                happyBefore[pos] =
-                    maxHappy + happyAfter[pos - 1] - happyBefore[pos - 1];
-            }
+    const happyAfter = state.updatedHappy.sort().reverse();
+
+    const maxHappy = Math.max(...state.initialHappy);
+    let happyBefore = [];
+    happyAfter.forEach((happy, pos) => {
+        if (pos === 0) {
+            happyBefore[pos] = maxHappy;
+        } else {
+            happyBefore[pos] =
+                maxHappy + happyAfter[pos - 1] - happyBefore[pos - 1];
+        }
+    });
+
+    const payload = state.responses.map((response, pos) => ({
+        ...response,
+        happy_before: happyBefore[pos],
+        happy_after: happyAfter[pos],
+    }));
+
+    resetState();
+
+    getApiData().then((api) => {
+        console.log({ payload, api });
+
+        GM.xmlHttpRequest({
+            url: "https://yata.alwaysdata.net/tmp/gym",
+            method: "POST",
+            headers: {
+                "content-type": "application/json",
+            },
+            body: JSON.stringify({ payload, api }),
+            onload: (response) => console.log(response),
         });
+    // What should we do in case of API Errors?
+    }).catch((error) => console.log(response));
 
-        const payload = state.responses.map((response, pos) => ({
-            ...response,
-            happy_before: happyBefore[pos],
-            happy_after: happyAfter[pos],
-        }));
-
-        resetState();
-
-        getApiData().then((api) => {
-            console.log({ payload, api });
-
-            GM.xmlHttpRequest({
-                url: "https://yata.alwaysdata.net/tmp/gym",
-                method: "POST",
-                headers: {
-                    "content-type": "application/json",
-                },
-                body: JSON.stringify({ payload, api }),
-                onload: (response) => console.log(response),
-            });
-        }).catch((error) => reject(error));;
-    }
 };
 
 const getHappy = () =>
@@ -172,32 +175,31 @@ const getGym = () =>
 const fetch = window.fetch;
 
 unsafeWindow.fetch = function () {
-    if (arguments[0].indexOf("gym.php?step=train") !== -1) {
-        const index = announceRequest(getHappy());
-        return new Promise((resolve, reject) => {
-            fetch
-                .apply(this, arguments)
-                .then((response) => {
-                    resolve(response.clone());
-                    response.json().then((json) => {
-                        publishResponse(index, {
-                            energy_used: json.energySpent,
-                            stat_after: parseFloat(
-                                json.stat.newValue.replace(/,/g, "")
-                            ),
-                            stat_gain: parseFloat(
-                                json.gainMessage.split(" ")[2].replace(/,/g, "")
-                            ),
-                            stat_type: json.stat.name,
-                            gym_id: getGym(),
-                        });
-                    });
-                })
-                .catch((error) => reject(error));
-        });
-    } else {
+    if (arguments[0].indexOf("gym.php?step=train") === -1) {
         return fetch.apply(this, arguments);
     }
+    const index = announceRequest(getHappy());
+    return new Promise((resolve, reject) => {
+        fetch
+            .apply(this, arguments)
+            .then((response) => {
+                resolve(response.clone());
+                response.json().then((json) => {
+                    publishResponse(index, {
+                        energy_used: json.energySpent,
+                        stat_after: parseFloat(
+                            json.stat.newValue.replace(/,/g, "")
+                        ),
+                        stat_gain: parseFloat(
+                            json.gainMessage.split(" ")[2].replace(/,/g, "")
+                        ),
+                        stat_type: json.stat.name,
+                        gym_id: getGym(),
+                    });
+                });
+            })
+            .catch((error) => reject(error));
+    });
 };
 
 const OrigWebSocket = window.WebSocket;
