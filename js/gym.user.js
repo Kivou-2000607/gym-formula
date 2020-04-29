@@ -9,13 +9,53 @@
 // @run-at       document-start
 // ==/UserScript==
 
+const apiKey = "";
+
 const state = {
     counter: 0,
     lastUpdate: Number.MAX_SAFE_INTEGER,
     initialHappy: [],
     updatedHappy: [],
     responses: [],
+    api: undefined,
 };
+
+const getApiData = () =>
+    new Promise((resolve) => {
+        if (state.api) resolve(state.api);
+
+        GM.xmlHttpRequest({
+            url: `https://api.torn.com/user/?key=${apiKey}&selections=perks,timestamp,basic`,
+            onload: (response) => {
+                console.log(response);
+                const perkRegex = /gym|gain|happ/i;
+                const json = JSON.parse(response.responseText);
+                state.api = {
+                    faction_perks: json.faction_perks?.filter((perk) =>
+                        perkRegex.test(perk)
+                    ),
+                    company_perks: json.company_perks?.filter((perk) =>
+                        perkRegex.test(perk)
+                    ),
+                    enhancer_perks: json.enhancer_perks?.filter((perk) =>
+                        perkRegex.test(perk)
+                    ),
+                    education_perks: json.education_perks?.filter((perk) =>
+                        perkRegex.test(perk)
+                    ),
+                    property_perks: json.property_perks?.filter((perk) =>
+                        perkRegex.test(perk)
+                    ),
+                    book_perks: json.book_perks?.filter((perk) =>
+                        perkRegex.test(perk)
+                    ),
+                    time_diff: Math.floor(Date.now() / 1000 - json.timestamp),
+                    player_id: json.player_id,
+                };
+                resolve(state.api);
+            },
+        });
+    });
 
 const resetState = () => {
     state.counter = 0;
@@ -61,31 +101,27 @@ const publishResponse = (index, response) => {
             }
         });
 
-        console.log(
-            state.responses.map((response, pos) => ({
-                ...response,
-                happyBefore: happyBefore[pos],
-                happyAfter: happyAfter[pos],
-            }))
-        );
-
-        GM.xmlHttpRequest({
-            url: "https://yata.alwaysdata.net/tmp/gym",
-            method: "POST",
-            headers: {
-                "content-type": "application/json",
-            },
-            body: JSON.stringify(
-                state.responses.map((response, pos) => ({
-                    ...response,
-                    happy_before: happyBefore[pos],
-                    happy_after: happyAfter[pos],
-                }))
-            ),
-            onload: (response) => console.log(response),
-        });
+        const payload = state.responses.map((response, pos) => ({
+            ...response,
+            happyBefore: happyBefore[pos],
+            happyAfter: happyAfter[pos],
+        }));
 
         resetState();
+
+        getApiData().then((api) => {
+            console.log({ payload, api });
+
+            GM.xmlHttpRequest({
+                url: "https://yata.alwaysdata.net/tmp/gym",
+                method: "POST",
+                headers: {
+                    "content-type": "application/json",
+                },
+                body: JSON.stringify({ payload, api }),
+                onload: (response) => console.log(response),
+            });
+        });
     }
 };
 
