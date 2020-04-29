@@ -9,39 +9,60 @@
 // @run-at       document-start
 // ==/UserScript==
 
-let counter = 0;
+const state = {
+    counter: 0,
+    lastUpdate: Number.MAX_SAFE_INTEGER,
+    initialHappy: [],
+    updatedHappy: [],
+    responses: [],
+};
 
-let initialHappy = [];
+const resetState = () => {
+    state.counter = 0;
+    state.lastUpdate = Number.MAX_SAFE_INTEGER;
+    state.initialHappy = [];
+    state.updatedHappy = [];
+    state.responses = [];
+};
 
-let updatedHappy = [];
-
-let responses = [];
+const happyUpdate = (happy) => {
+    if (state.counter > 0) {
+        if (happy < state.lastUpdate) {
+            state.updatedHappy.push(happy);
+            state.lastUpdate = happy;
+        } else {
+            resetState();
+        }
+    }
+};
 
 const announceRequest = (happy) => {
-    initialHappy.push(happy);
+    state.initialHappy.push(happy);
 
-    return counter++;
+    return state.counter++;
 };
 
 const publishResponse = (index, response) => {
-    responses[index] = response;
+    if (state.counter === 0) return;
 
-    if (counter <= initialHappy.length && counter <= updatedHappy.length) {
-        const happyAfter = updatedHappy.sort().reverse();
+    state.responses[index] = response;
 
-        const minHappy = Math.max(...initialHappy);
+    if (state.counter <= state.updatedHappy.length) {
+        const happyAfter = state.updatedHappy.sort().reverse();
+
+        const maxHappy = Math.max(...state.initialHappy);
         let happyBefore = [];
         happyAfter.forEach((happy, pos) => {
             if (pos === 0) {
-                happyBefore[pos] = minHappy;
+                happyBefore[pos] = maxHappy;
             } else {
                 happyBefore[pos] =
-                    minHappy + happyAfter[pos - 1] - happyBefore[pos - 1];
+                    maxHappy + happyAfter[pos - 1] - happyBefore[pos - 1];
             }
         });
 
         console.log(
-            responses.map((response, pos) => ({
+            state.responses.map((response, pos) => ({
                 ...response,
                 happyBefore: happyBefore[pos],
                 happyAfter: happyAfter[pos],
@@ -55,19 +76,16 @@ const publishResponse = (index, response) => {
                 "content-type": "application/json",
             },
             body: JSON.stringify(
-                responses.map((response, pos) => ({
+                state.responses.map((response, pos) => ({
                     ...response,
-                    happyBefore: happyBefore[pos],
-                    happyAfter: happyAfter[pos],
+                    happy_before: happyBefore[pos],
+                    happy_after: happyAfter[pos],
                 }))
             ),
             onload: (response) => console.log(response),
         });
 
-        counter = 0;
-        initialHappy = [];
-        updatedHappy = [];
-        responses = [];
+        resetState();
     }
 };
 
@@ -97,11 +115,15 @@ unsafeWindow.fetch = function () {
                     resolve(response.clone());
                     response.json().then((json) => {
                         publishResponse(index, {
-                            energySpent: json.energySpent,
-                            newValue: json.stat.newValue,
-                            gain: json.gainMessage.split(" ")[2],
-                            stat: json.stat.name,
-                            gym: getGym(),
+                            energy_used: json.energySpent,
+                            stat_after: parseFloat(
+                                json.stat.newValue.replace(/,/g, "")
+                            ),
+                            stat_gain: parseFloat(
+                                json.gainMessage.split(" ")[2].replace(/,/g, "")
+                            ),
+                            stat_type: json.stat.name,
+                            gym_id: getGym(),
                         });
                     });
                 })
@@ -137,8 +159,8 @@ unsafeWindow.WebSocket = function WebSocket(url, protocols) {
         const happy =
             packet.body?.data?.message?.namespaces?.sidebar?.actions
                 ?.updateHappy?.amount;
-        if (happy && counter > 0) {
-            updatedHappy.push(happy);
+        if (happy) {
+            happyUpdate(happy);
         }
     });
     return ws;
