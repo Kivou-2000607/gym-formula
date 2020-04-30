@@ -1,7 +1,8 @@
 // ==UserScript==
 // @name         Gym scraper
 // @namespace    http://tampermonkey.net/
-// @version      0.4
+// @version      0.5
+// @updateURL    https://github.com/Kivou-2000607/gym-formula/raw/master/js/gym.user.js
 // @description  try to take over the world!
 // @author       Pyrit[2111649]
 // @match        https://www.torn.com/gym.php
