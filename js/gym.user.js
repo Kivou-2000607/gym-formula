@@ -127,7 +127,7 @@ const sendData = () => {
     )
         return;
 
-    const happyAfter = state.updatedHappy.sort().reverse();
+    const happyAfter = state.updatedHappy.sort((a, b) => b - a);
 
     const maxHappy = Math.max(...state.initialHappy);
     let happyBefore = [];
