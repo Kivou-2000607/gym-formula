@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gym scraper
 // @namespace    http://tampermonkey.net/
-// @version      0.2
+// @version      0.3
 // @description  try to take over the world!
 // @author       Pyrit[2111649]
 // @match        https://www.torn.com/gym.php
@@ -140,11 +140,13 @@ const sendData = () => {
         }
     });
 
-    const payload = state.responses.map((response, pos) => ({
-        ...response,
-        happy_before: happyBefore[pos],
-        happy_after: happyAfter[pos],
-    }));
+    const payload = state.responses
+        .sort((a, b) => a.stat_after - b.stat_after)
+        .map((response, pos) => ({
+            ...response,
+            happy_before: happyBefore[pos],
+            happy_after: happyAfter[pos],
+        }));
 
     resetState();
 
