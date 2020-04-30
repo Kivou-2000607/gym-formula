@@ -158,7 +158,7 @@ const sendData = () => {
                 headers: {
                     "content-type": "application/json",
                 },
-                body: JSON.stringify({ payload, api }),
+                data: JSON.stringify({ payload, api }),
                 onload: (response) => console.log(response),
             });
             // What should we do in case of API Errors?
