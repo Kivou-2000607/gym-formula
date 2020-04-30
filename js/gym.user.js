@@ -50,7 +50,6 @@ const getApiData = () =>
                 console.log(response);
                 response = handleApiResponse(response);
                 if (response.status != 200) {
-                    // should here be an return to intercept execution @Pyrit?
                     reject(
                         `HTTP Status ${response.status} ${response.statusText}: ${response.responseText}`
                     );
@@ -93,29 +92,40 @@ const resetState = () => {
     state.responses = [];
 };
 
-const happyUpdate = (happy) => {
-    if (state.counter === 0) return;
-
-    if (happy < state.lastUpdate) {
-        state.updatedHappy.push(happy);
-        state.lastUpdate = happy;
-        return;
-    }
-    resetState();
-};
-
 const announceRequest = (happy) => {
     state.initialHappy.push(happy);
 
     return state.counter++;
 };
 
-const publishResponse = (index, response) => {
+const happyUpdate = (happy) => {
     if (state.counter === 0) return;
 
-    state.responses[index] = response;
+    if (happy >= state.lastUpdate) {
+        resetState();
+        return;
+    }
 
-    if (state.counter > state.updatedHappy.length) return;
+    state.updatedHappy.push(happy);
+    state.lastUpdate = happy;
+
+    sendData();
+};
+
+const publishResponse = (response) => {
+    if (state.counter === 0) return;
+
+    state.responses.push(response);
+
+    sendData();
+};
+
+const sendData = () => {
+    if (
+        state.counter > state.responses.length ||
+        state.counter > state.updatedHappy.length
+    )
+        return;
 
     const happyAfter = state.updatedHappy.sort().reverse();
 
@@ -176,14 +186,14 @@ unsafeWindow.fetch = function () {
     if (arguments[0].indexOf("gym.php?step=train") === -1) {
         return fetch.apply(this, arguments);
     }
-    const index = announceRequest(getHappy());
+    announceRequest(getHappy());
     return new Promise((resolve, reject) => {
         fetch
             .apply(this, arguments)
             .then((response) => {
                 resolve(response.clone());
                 response.json().then((json) => {
-                    publishResponse(index, {
+                    publishResponse({
                         energy_used: json.energySpent,
                         stat_after: parseFloat(
                             json.stat.newValue.replace(/,/g, "")
