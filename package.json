@@ -1,0 +1,21 @@
+{
+  "name": "gym-formula",
+  "version": "1.0.0",
+  "description": "dev dependencies for userscript",
+  "main": "gym.user.js",
+  "scripts": {
+    "lint": "node_modules/.bin/eslint js/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com-TotallyNot:Kivou-2000607/gym-formula.git"
+  },
+  "author": "Pyrit[2111649]",
+  "license": "MIT",
+  "devDependencies": {
+    "babel-eslint": "^10.1.0",
+    "eslint": "^6.8.0",
+    "eslint-config-prettier": "^6.11.0",
+    "prettier": "^2.0.5"
+  }
+}

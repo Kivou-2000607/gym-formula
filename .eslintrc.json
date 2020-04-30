@@ -1,0 +1,15 @@
+{
+    "parser": "babel-eslint",
+    "parserOptions": {
+        "ecmaVersion": 2020
+    },
+    "env": {
+        "browser": true,
+        "es6": true,
+        "greasemonkey": true
+    },
+    "extends": [
+        "eslint:recommended",
+        "prettier"
+    ]
+}

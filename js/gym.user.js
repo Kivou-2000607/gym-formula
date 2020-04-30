@@ -25,26 +25,20 @@ function handleApiResponse(response) {
         return response;
     }
     const data = JSON.parse(response.responseText);
-    if (!('error' in data)) {
+    if (!("error" in data)) {
         return response;
     }
-    error = data['error'];
-    code = error['code'];
-    response.responseText = error['error'];
+    const error = data["error"];
+    const code = error["code"];
+    response.responseText = error["error"];
 
-    if ([1, 2, 3, 4, 6].includes(code))
-        response.status = 400;
-    else if ([0, 12].includes(code))
-        response.status = 500;
-    else if ([7, 8, 10, 11].includes(code))
-        response.status = 403;
-    else if ([9].includes(code))
-        response.status = 503;
-    else if ([5].includes(code))
-        response.status = 429;
+    if ([1, 2, 3, 4, 6].includes(code)) response.status = 400;
+    else if ([0, 12].includes(code)) response.status = 500;
+    else if ([7, 8, 10, 11].includes(code)) response.status = 403;
+    else if ([9].includes(code)) response.status = 503;
+    else if ([5].includes(code)) response.status = 429;
     return response;
-};
-
+}
 
 const getApiData = () =>
     new Promise((resolve, reject) => {
@@ -56,8 +50,11 @@ const getApiData = () =>
                 console.log(response);
                 response = handleApiResponse(response);
                 if (response.status != 200) {
-                    // should here be an return to intercept execution @Pyrit? 
-                    reject(`HTTP Status ${response.status} ${response.statusText}: ${response.responseText}`);
+                    // should here be an return to intercept execution @Pyrit?
+                    reject(
+                        `HTTP Status ${response.status} ${response.statusText}: ${response.responseText}`
+                    );
+                    return;
                 }
                 const perkRegex = /gym|gain|happ/i;
                 const json = JSON.parse(response.responseText);
@@ -103,7 +100,7 @@ const happyUpdate = (happy) => {
         state.updatedHappy.push(happy);
         state.lastUpdate = happy;
         return;
-    } 
+    }
     resetState();
 };
 
@@ -141,21 +138,22 @@ const publishResponse = (index, response) => {
 
     resetState();
 
-    getApiData().then((api) => {
-        console.log({ payload, api });
+    getApiData()
+        .then((api) => {
+            console.log({ payload, api });
 
-        GM.xmlHttpRequest({
-            url: "https://yata.alwaysdata.net/tmp/gym",
-            method: "POST",
-            headers: {
-                "content-type": "application/json",
-            },
-            body: JSON.stringify({ payload, api }),
-            onload: (response) => console.log(response),
-        });
-    // What should we do in case of API Errors?
-    }).catch((error) => console.log(response));
-
+            GM.xmlHttpRequest({
+                url: "https://yata.alwaysdata.net/tmp/gym",
+                method: "POST",
+                headers: {
+                    "content-type": "application/json",
+                },
+                body: JSON.stringify({ payload, api }),
+                onload: (response) => console.log(response),
+            });
+            // What should we do in case of API Errors?
+        })
+        .catch((error) => console.log(error));
 };
 
 const getHappy = () =>
