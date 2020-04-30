@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gym scraper
 // @namespace    http://tampermonkey.net/
-// @version      0.5
+// @version      0.6
 // @updateURL    https://github.com/Kivou-2000607/gym-formula/raw/master/js/gym.user.js
 // @description  try to take over the world!
 // @author       Pyrit[2111649]
@@ -175,12 +175,15 @@ const getHappy = () =>
             .innerText.match(/^\d+/)[0]
     );
 
-const getGym = () =>
-    [...document.querySelectorAll('[id^="gym"]')]
+const getGym = () => {
+    const id = [...document.querySelectorAll('[id^="gym"]')]
         .filter((gym) =>
             [...gym.classList].some((cls) => cls.indexOf("active") !== -1)
         )
         .map((active) => parseInt(active.id.match(/\d+$/)[0]))[0];
+
+    return id > 0 ? id : 33;
+};
 
 const fetch = window.fetch;
 
