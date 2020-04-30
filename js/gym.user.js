@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gym scraper
 // @namespace    http://tampermonkey.net/
-// @version      0.3
+// @version      0.4
 // @description  try to take over the world!
 // @author       Pyrit[2111649]
 // @match        https://www.torn.com/gym.php
@@ -135,8 +135,7 @@ const sendData = () => {
         if (pos === 0) {
             happyBefore[pos] = maxHappy;
         } else {
-            happyBefore[pos] =
-                maxHappy + happyAfter[pos - 1] - happyBefore[pos - 1];
+            happyBefore[pos] = happyAfter[pos - 1];
         }
     });
 
