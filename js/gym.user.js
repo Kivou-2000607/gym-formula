@@ -123,7 +123,7 @@ const announceRequest = (happy) => {
 const happyUpdate = (happy) => {
     if (state.counter === 0) return;
 
-    if (happy >= state.lastUpdate) {
+    if (happy > state.lastUpdate) {
         resetState();
         return;
     }
@@ -261,7 +261,7 @@ unsafeWindow.WebSocket = function WebSocket(url, protocols) {
         const happy =
             packet.body?.data?.message?.namespaces?.sidebar?.actions
                 ?.updateHappy?.amount;
-        if (happy) {
+        if (happy !== undefined) {
             happyUpdate(happy);
         }
     });
