@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gym scraper
-// @namespace    http://tampermonkey.net/
-// @version      0.7
+// @namespace    yata.alwaysdata.net
+// @version      0.8
 // @updateURL    https://github.com/Kivou-2000607/gym-formula/raw/master/js/gym.user.js
 // @description  try to take over the world!
 // @author       Pyrit[2111649]
@@ -176,7 +176,7 @@ const sendData = () => {
             console.log({ payload, api });
 
             GM.xmlHttpRequest({
-                url: "https://yata.alwaysdata.net/tmp/gym",
+                url: "https://yata.alwaysdata.net/tryfindmenow/gym",
                 method: "POST",
                 headers: {
                     "content-type": "application/json",
