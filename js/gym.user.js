@@ -1,12 +1,14 @@
 // ==UserScript==
 // @name         Gym scraper
 // @namespace    http://tampermonkey.net/
-// @version      0.6
+// @version      0.7
 // @updateURL    https://github.com/Kivou-2000607/gym-formula/raw/master/js/gym.user.js
 // @description  try to take over the world!
 // @author       Pyrit[2111649]
 // @match        https://www.torn.com/gym.php
 // @grant        GM.xmlHttpRequest
+// @grant        GM.getValue
+// @grant        GM.setValue
 // @run-at       document-start
 // ==/UserScript==
 
@@ -41,48 +43,67 @@ function handleApiResponse(response) {
     return response;
 }
 
+const getIdentifier = () =>
+    GM.getValue("gym_formula_id").then((id) => {
+        if (id === undefined) {
+            const arr = new Uint8Array(8);
+            crypto.getRandomValues(arr);
+            id = btoa(
+                Array.prototype.map.call(arr, (byte) =>
+                    String.fromCharCode(byte)
+                )
+            );
+            GM.setValue("gym_formula_id", id);
+        }
+        return id;
+    });
+
 const getApiData = () =>
     new Promise((resolve, reject) => {
         if (state.api) resolve(state.api);
 
-        GM.xmlHttpRequest({
-            url: `https://api.torn.com/user/?key=${apiKey}&selections=perks,timestamp,basic`,
-            onload: (response) => {
-                console.log(response);
-                response = handleApiResponse(response);
-                if (response.status != 200) {
-                    reject(
-                        `HTTP Status ${response.status} ${response.statusText}: ${response.responseText}`
-                    );
-                    return;
-                }
-                const perkRegex = /gym|gain|happ/i;
-                const json = JSON.parse(response.responseText);
-                state.api = {
-                    faction_perks: json.faction_perks?.filter((perk) =>
-                        perkRegex.test(perk)
-                    ),
-                    company_perks: json.company_perks?.filter((perk) =>
-                        perkRegex.test(perk)
-                    ),
-                    enhancer_perks: json.enhancer_perks?.filter((perk) =>
-                        perkRegex.test(perk)
-                    ),
-                    education_perks: json.education_perks?.filter((perk) =>
-                        perkRegex.test(perk)
-                    ),
-                    property_perks: json.property_perks?.filter((perk) =>
-                        perkRegex.test(perk)
-                    ),
-                    book_perks: json.book_perks?.filter((perk) =>
-                        perkRegex.test(perk)
-                    ),
-                    time_diff: Math.floor(Date.now() / 1000 - json.timestamp),
-                    player_id: json.player_id,
-                };
-                resolve(state.api);
-            },
-        });
+        getIdentifier().then((id) =>
+            GM.xmlHttpRequest({
+                url: `https://api.torn.com/user/?key=${apiKey}&selections=perks,timestamp,basic`,
+                onload: (response) => {
+                    console.log(response);
+                    response = handleApiResponse(response);
+                    if (response.status != 200) {
+                        reject(
+                            `HTTP Status ${response.status} ${response.statusText}: ${response.responseText}`
+                        );
+                        return;
+                    }
+                    const perkRegex = /gym|gain|happ/i;
+                    const json = JSON.parse(response.responseText);
+                    state.api = {
+                        faction_perks: json.faction_perks?.filter((perk) =>
+                            perkRegex.test(perk)
+                        ),
+                        company_perks: json.company_perks?.filter((perk) =>
+                            perkRegex.test(perk)
+                        ),
+                        enhancer_perks: json.enhancer_perks?.filter((perk) =>
+                            perkRegex.test(perk)
+                        ),
+                        education_perks: json.education_perks?.filter((perk) =>
+                            perkRegex.test(perk)
+                        ),
+                        property_perks: json.property_perks?.filter((perk) =>
+                            perkRegex.test(perk)
+                        ),
+                        book_perks: json.book_perks?.filter((perk) =>
+                            perkRegex.test(perk)
+                        ),
+                        time_diff: Math.floor(
+                            Date.now() / 1000 - json.timestamp
+                        ),
+                        id_key: id,
+                    };
+                    resolve(state.api);
+                },
+            })
+        );
     });
 
 const resetState = () => {
