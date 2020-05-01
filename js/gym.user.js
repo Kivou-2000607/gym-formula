@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gym scraper
 // @namespace    yata.alwaysdata.net
-// @version      0.9
+// @version      0.10
 // @updateURL    https://github.com/Kivou-2000607/gym-formula/raw/master/js/gym.user.js
 // @description  try to take over the world!
 // @author       Pyrit[2111649]
@@ -60,6 +60,8 @@ const getIdentifier = () =>
 
 const getApiData = () =>
     new Promise((resolve, reject) => {
+        if (apiKey === "") reject("You haven't entered your API key");
+
         if (state.api) resolve(state.api);
 
         getIdentifier().then((id) =>
@@ -105,6 +107,29 @@ const getApiData = () =>
             })
         );
     });
+
+const displayMessage = (message) => {
+    const messageElement = document.createElement("div");
+    messageElement.innerHTML = `
+        <div class="info-msg-cont  border-round ${message.color}" style="display:block">
+            <div class="info-msg border-round">
+                <i class="info-icon"></i>
+                <div class="delimiter">
+                    <div class="msg right-round">
+                        <div class="ajax-action">
+                            ${message.content}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+
+    console.log("insert", messageElement);
+
+    document
+        .querySelector(".content-wrapper")
+        .insertBefore(messageElement, document.querySelector("#gymroot"));
+};
 
 const resetState = () => {
     state.counter = 0;
@@ -186,7 +211,7 @@ const sendData = () => {
             });
             // What should we do in case of API Errors?
         })
-        .catch((error) => console.log(error));
+        .catch((error) => displayMessage({ content: error, color: "red" }));
 };
 
 const getHappy = () =>
