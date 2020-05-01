@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Gym scraper
 // @namespace    yata.alwaysdata.net
-// @version      0.10
+// @version      1.0
 // @updateURL    https://github.com/Kivou-2000607/gym-formula/raw/master/js/gym.user.js
-// @description  try to take over the world!
+// @description  export gym training data in order to crack the formula
 // @author       Pyrit[2111649]
 // @match        https://www.torn.com/gym.php
 // @grant        GM.xmlHttpRequest
@@ -33,7 +33,7 @@ function handleApiResponse(response) {
     }
     const error = data["error"];
     const code = error["code"];
-    response.responseText = error["error"];
+    response.responseText = error.error.error;
 
     if ([1, 2, 3, 4, 6].includes(code)) response.status = 400;
     else if ([0, 12].includes(code)) response.status = 500;
@@ -66,7 +66,7 @@ const getApiData = () =>
 
         getIdentifier().then((id) =>
             GM.xmlHttpRequest({
-                url: `https://api.torn.com/user/?key=${apiKey}&selections=perks,timestamp,basic`,
+                url: `https://api.torn.com/user/?key=${apiKey}&selections=perks,timestamp`,
                 onload: (response) => {
                     console.log(response);
                     response = handleApiResponse(response);
@@ -111,13 +111,13 @@ const getApiData = () =>
 const displayMessage = (message) => {
     const messageElement = document.createElement("div");
     messageElement.innerHTML = `
-        <div class="info-msg-cont  border-round ${message.color}" style="display:block">
+        <div class="info-msg-cont border-round ${message.color}" style="display:block">
             <div class="info-msg border-round">
                 <i class="info-icon"></i>
                 <div class="delimiter">
                     <div class="msg right-round">
                         <div class="ajax-action">
-                            ${message.content}
+                            gym formula script: ${message.content}
                         </div>
                     </div>
                 </div>
@@ -201,7 +201,7 @@ const sendData = () => {
             console.log({ payload, api });
 
             GM.xmlHttpRequest({
-                url: "https://yata.alwaysdata.net/tryfindmenow/gym",
+                url: "https://yata.alwaysdata.net/api/gym",
                 method: "POST",
                 headers: {
                     "content-type": "application/json",
