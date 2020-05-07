@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gym scraper
 // @namespace    yata.alwaysdata.net
-// @version      1.1
+// @version      1.2
 // @updateURL    https://github.com/Kivou-2000607/gym-formula/raw/master/js/gym.user.js
 // @description  export gym training data in order to crack the formula
 // @author       Pyrit[2111649]
@@ -9,7 +9,7 @@
 // @grant        GM.xmlHttpRequest
 // @grant        GM.getValue
 // @grant        GM.setValue
-// @connnect     https://yata.alwaysdata.net/api
+// @connect     https://yata.alwaysdata.net/api/gym
 // @run-at       document-start
 // ==/UserScript==
 
