@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gym scraper
 // @namespace    yata.alwaysdata.net
-// @version      1.0
+// @version      1.1
 // @updateURL    https://github.com/Kivou-2000607/gym-formula/raw/master/js/gym.user.js
 // @description  export gym training data in order to crack the formula
 // @author       Pyrit[2111649]
@@ -9,6 +9,7 @@
 // @grant        GM.xmlHttpRequest
 // @grant        GM.getValue
 // @grant        GM.setValue
+// @connnect     https://yata.alwaysdata.net/api
 // @run-at       document-start
 // ==/UserScript==
 
@@ -22,26 +23,6 @@ const state = {
     responses: [],
     api: undefined,
 };
-
-function handleApiResponse(response) {
-    if (response.status != 200) {
-        return response;
-    }
-    const data = JSON.parse(response.responseText);
-    if (!("error" in data)) {
-        return response;
-    }
-    const error = data["error"];
-    const code = error["code"];
-    response.responseText = error.error.error;
-
-    if ([1, 2, 3, 4, 6].includes(code)) response.status = 400;
-    else if ([0, 12].includes(code)) response.status = 500;
-    else if ([7, 8, 10, 11].includes(code)) response.status = 403;
-    else if ([9].includes(code)) response.status = 503;
-    else if ([5].includes(code)) response.status = 429;
-    return response;
-}
 
 const getIdentifier = () =>
     GM.getValue("gym_formula_id").then((id) => {
@@ -60,24 +41,25 @@ const getIdentifier = () =>
 
 const getApiData = () =>
     new Promise((resolve, reject) => {
-        if (apiKey === "") reject("You haven't entered your API key");
+        if (apiKey === "") {
+            reject("You haven't entered your API key");
+            return;
+        }
 
         if (state.api) resolve(state.api);
 
         getIdentifier().then((id) =>
-            GM.xmlHttpRequest({
-                url: `https://api.torn.com/user/?key=${apiKey}&selections=perks,timestamp`,
-                onload: (response) => {
-                    console.log(response);
-                    response = handleApiResponse(response);
-                    if (response.status != 200) {
-                        reject(
-                            `HTTP Status ${response.status} ${response.statusText}: ${response.responseText}`
-                        );
-                        return;
+            fetch(
+                `https://api.torn.com/user?key=${apiKey}&selections=perks,timestamp`
+            )
+                .then((response) => response.json())
+                .then((json) => {
+                    if ("error" in json) {
+                        const { error, code } = json.error;
+                        reject(`api has returned error ${code} "${error}"`);
                     }
+
                     const perkRegex = /gym|gain|happ/i;
-                    const json = JSON.parse(response.responseText);
                     state.api = {
                         faction_perks: json.faction_perks?.filter((perk) =>
                             perkRegex.test(perk)
@@ -103,8 +85,7 @@ const getApiData = () =>
                         id_key: id,
                     };
                     resolve(state.api);
-                },
-            })
+                })
         );
     });
 
