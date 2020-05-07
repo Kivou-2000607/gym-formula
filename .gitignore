@@ -133,3 +133,6 @@ dmypy.json
 
 # Node
 node_modules/
+
+# json
+trains.json

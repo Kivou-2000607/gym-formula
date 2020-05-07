@@ -15,6 +15,18 @@ e = -0.0301431777
 # stat cap
 sc = 50000000
 
+
+def vladar(energy, so, H=250, B=0.0, G=1.0):
+
+    # states coefficients
+    alpha = (a * numpy.log(H + b) + c) * (1. + B) * G
+    beta = (d * (H + b) + e) * (1. + B) * G
+
+    stat_cap = float(min(so, sc))
+
+    return (alpha * stat_cap + beta) * energy
+
+
 def bs_s(energy, so, H=250, B=0.0, G=1.0, verbose=False):
     """Returns the stat given:
         energy: the energy spent in gym
@@ -121,3 +133,17 @@ def bs_e(si, sf, H=250, B=0.0, G=1.0, verbose=False):
         print(f"Total: {dE:,.1f}")
 
     return dE
+
+
+def normalize_cap(train, type="+"):
+    perks_keys = ["perks_faction", "perks_property", "perks_education_stat", "perks_education_all", "perks_company"]
+
+    if type == "x":
+        b_perks = [1 + train.get(key) / 100. for key in perks_keys]
+        bonus = numpy.prod(b_perks) - 1
+    else:
+        bonus = numpy.sum([train.get(key) / 100. for key in perks_keys])
+
+    gym_dot = train.get("gym_dot") / 10.
+
+    return (1. + bonus) * gym_dot * float(train["energy_used"])
