@@ -9,7 +9,7 @@
 // @grant        GM.xmlHttpRequest
 // @grant        GM.getValue
 // @grant        GM.setValue
-// @connect     https://yata.alwaysdata.net/api/gym
+// @connect      yata.alwaysdata.net
 // @run-at       document-start
 // ==/UserScript==
 
