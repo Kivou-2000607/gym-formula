@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gym scraper
 // @namespace    yata.alwaysdata.net
-// @version      1.3
+// @version      1.4
 // @updateURL    https://github.com/Kivou-2000607/gym-formula/raw/master/js/gym.user.js
 // @description  export gym training data in order to crack the formula
 // @author       Pyrit[2111649]
@@ -265,7 +265,7 @@ unsafeWindow.WebSocket = function WebSocket(url, protocols) {
     wsAddListener(ws, "message", (event) => {
         const packet = JSON.parse(event.data);
         const happy =
-            packet.body?.data?.message?.namespaces?.sidebar?.actions
+            packet.result?.data?.data?.message?.namespaces?.sidebar?.actions
                 ?.updateHappy?.amount;
         if (happy !== undefined) {
             happyUpdate(happy);
